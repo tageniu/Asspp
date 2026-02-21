@@ -13,7 +13,7 @@ class AppStore: ObservableObject {
     @PublishedPersist(key: "Accounts", defaultValue: [], keychain: "wiki.qaq.Asspp.Accounts")
     var accounts: [UserAccount]
 
-    @PublishedPersist(key: "DeviceIdentifier", defaultValue: "", keychain: "wiki.qaq.Asspp.DeviceIdentifier")
+    @PublishedPersist(key: "DeviceIdentifier", defaultValue: "")
     var deviceIdentifier: String
 
     @PublishedPersist(key: "DemoMode", defaultValue: false)

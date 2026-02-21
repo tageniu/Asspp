@@ -42,7 +42,12 @@ class FileStorage: PersistProvider {
     }
 }
 
-class KeychainStorage: PersistProvider {
+/// Uses FileStorage as reliable primary and iCloud Keychain as best-effort
+/// secondary for cross-device sync. On read, if FileStorage is empty, tries
+/// to pull synced data from Keychain. On write, always writes to FileStorage
+/// and best-effort writes to Keychain for sync.
+class SyncedKeychainStorage: PersistProvider {
+    private let fileStorage = FileStorage()
     private let keychain: Keychain
 
     init(service: String) {
@@ -50,14 +55,32 @@ class KeychainStorage: PersistProvider {
     }
 
     func data(forKey key: String) -> Data? {
-        try? keychain.getData(key)
+        if let data = fileStorage.data(forKey: key) {
+            return data
+        }
+        // FileStorage empty — try Keychain (synced from another device or old version)
+        do {
+            if let data = try keychain.getData(key) {
+                logger.info("[SyncedKeychain] migrated data for key '\(key)' from Keychain to FileStorage")
+                fileStorage.set(data, forKey: key)
+                return data
+            }
+        } catch {
+            logger.warning("[SyncedKeychain] Keychain read failed for key '\(key)': \(error)")
+        }
+        return nil
     }
 
     func set(_ data: Data?, forKey key: String) {
-        if let data {
-            try? keychain.set(data, key: key)
-        } else {
-            try? keychain.remove(key)
+        fileStorage.set(data, forKey: key)
+        do {
+            if let data {
+                try keychain.set(data, key: key)
+            } else {
+                try keychain.remove(key)
+            }
+        } catch {
+            logger.warning("[SyncedKeychain] Keychain write failed for key '\(key)': \(error)")
         }
     }
 }
@@ -104,8 +127,8 @@ struct Persist<Value: Codable> {
 
 extension PublishedPersist {
     init(key: String, defaultValue: Value, keychain: String) {
-        let keychainStorage = KeychainStorage(service: keychain)
-        self.init(key: key, defaultValue: defaultValue, engine: keychainStorage)
+        let syncedStorage = SyncedKeychainStorage(service: keychain)
+        self.init(key: key, defaultValue: defaultValue, engine: syncedStorage)
     }
 }
 

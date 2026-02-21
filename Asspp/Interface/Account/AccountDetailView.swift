@@ -12,7 +12,7 @@ import SwiftUI
 struct AccountDetailView: View {
     let accountId: AppStore.UserAccount.ID
 
-    @State private var vm = AppStore.this
+    @StateObject private var vm = AppStore.this
     @Environment(\.dismiss) var dismiss
 
     private var account: AppStore.UserAccount? {
@@ -90,7 +90,7 @@ struct AccountDetailView: View {
                 .foregroundStyle(.red)
             }
         }
-        .formStyle(.grouped)
+        .groupedFormStyle()
         .navigationTitle("Account Details")
     }
 }

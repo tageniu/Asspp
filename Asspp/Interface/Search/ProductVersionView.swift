@@ -13,7 +13,7 @@ struct ProductVersionView: View {
     let accountIdentifier: String
     let package: AppStore.AppPackage
 
-    @State private var dvm = Downloads.this
+    @StateObject private var dvm = Downloads.this
     @State private var hint: Hint?
 
     var body: some View {

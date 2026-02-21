@@ -5,9 +5,11 @@
 
 #if canImport(AppKit) && !canImport(UIKit)
     import AppKit
+    import Combine
 
     class AppDelegate: NSObject, NSApplicationDelegate {
         var activityToken: NSObjectProtocol?
+        var cancellable: AnyCancellable?
 
         func applicationDidFinishLaunching(_: Notification) {
             Task { @MainActor in
@@ -17,15 +19,21 @@
 
         @MainActor
         private func observeDownloadCount() {
-            withObservationTracking {
-                let count = Downloads.this.runningTaskCount
-                NSApp.dockTile.badgeLabel = count > 0 ? "\(count)" : nil
-                updateProcessActivity(isDownloading: count > 0)
-            } onChange: {
-                Task { @MainActor in
-                    self.observeDownloadCount()
+            // Run once immediately
+            updateForDownloadCount()
+
+            cancellable = Downloads.this.objectWillChange
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    self?.updateForDownloadCount()
                 }
-            }
+        }
+
+        @MainActor
+        private func updateForDownloadCount() {
+            let count = Downloads.this.runningTaskCount
+            NSApp.dockTile.badgeLabel = count > 0 ? "\(count)" : nil
+            updateProcessActivity(isDownloading: count > 0)
         }
 
         private func updateProcessActivity(isDownloading: Bool) {

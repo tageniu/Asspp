@@ -5,7 +5,7 @@
 
     @available(iOS, unavailable)
     struct InstalledListView: View {
-        @State var vm = DeviceManager()
+        @StateObject var vm = DeviceManager()
         @State private var isLoading = false
         @State private var pendingUpdates: [DeviceCTL.Device: Set<Software>] = [:]
 
@@ -67,7 +67,7 @@
     }
 
     private struct AppRow: View {
-        @State var vm = AppStore.this
+        @StateObject var vm = AppStore.this
         var preferredIconSize: CGFloat? {
             50
         }

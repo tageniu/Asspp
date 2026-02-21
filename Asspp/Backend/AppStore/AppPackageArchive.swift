@@ -10,54 +10,27 @@ import Foundation
 import OrderedCollections
 
 @MainActor
-@Observable
-class AppPackageArchive {
-    @ObservationIgnored
+class AppPackageArchive: ObservableObject {
     let accountIdentifier: String?
-    @ObservationIgnored
     let region: String
 
-    var package: AppStore.AppPackage
+    @Published var package: AppStore.AppPackage
 
     typealias VersionIdentifier = String
-    @ObservationIgnored
-    private var _versionIdentifiers: Persist<[VersionIdentifier]>
+    @PublishedPersist
+    var versionIdentifiers: [VersionIdentifier]
 
-    var versionIdentifiers: [VersionIdentifier] {
-        get {
-            access(keyPath: \.versionIdentifiers)
-            return _versionIdentifiers.wrappedValue
-        }
-        set {
-            withMutation(keyPath: \.versionIdentifiers) {
-                _versionIdentifiers.wrappedValue = newValue
-            }
-        }
-    }
-
-    @ObservationIgnored
-    private var _versionItems: Persist<OrderedDictionary<VersionIdentifier, VersionMetadata>>
-
-    var versionItems: OrderedDictionary<VersionIdentifier, VersionMetadata> {
-        get {
-            access(keyPath: \.versionItems)
-            return _versionItems.wrappedValue
-        }
-        set {
-            withMutation(keyPath: \.versionItems) {
-                _versionItems.wrappedValue = newValue
-            }
-        }
-    }
+    @PublishedPersist
+    var versionItems: OrderedDictionary<VersionIdentifier, VersionMetadata>
 
     var isVersionItemsFullyLoaded: Bool {
         assert(versionItems.count <= versionIdentifiers.count)
         return versionItems.count == versionIdentifiers.count
     }
 
-    var error: String?
-    var loading = false
-    var shouldDismiss = false
+    @Published var error: String?
+    @Published var loading = false
+    @Published var shouldDismiss = false
 
     init(accountID: String?, region: String, package: AppStore.AppPackage) {
         accountIdentifier = accountID
@@ -67,8 +40,8 @@ class AppPackageArchive {
         let packageIdentifier = [package.id, package.software.bundleID.lowercased(), region]
             .joined()
             .lowercased()
-        _versionItems = Persist(key: "\(packageIdentifier).versions", defaultValue: [:])
-        _versionIdentifiers = Persist(key: "\(packageIdentifier).versionNumbers", defaultValue: [])
+        _versionItems = PublishedPersist(key: "\(packageIdentifier).versions", defaultValue: [:])
+        _versionIdentifiers = PublishedPersist(key: "\(packageIdentifier).versionNumbers", defaultValue: [])
     }
 
     func package(for externalVersion: String) -> AppStore.AppPackage? {

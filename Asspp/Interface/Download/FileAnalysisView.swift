@@ -87,9 +87,9 @@ struct FileAnalysisView: View {
                     .transition(.opacity)
             }
         }
-        .formStyle(.grouped)
-        .animation(.spring, value: relativePath)
-        .animation(.spring, value: extractedFile)
+        .groupedFormStyle()
+        .animation(.spring(), value: relativePath)
+        .animation(.spring(), value: extractedFile)
         .onAppear {
             message = "Examining contents..."
             Task {

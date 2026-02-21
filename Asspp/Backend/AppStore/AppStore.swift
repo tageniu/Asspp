@@ -8,61 +8,16 @@
 import ApplePackage
 import Foundation
 
-@Observable
 @MainActor
-class AppStore {
-    @ObservationIgnored
-    private var _accounts = Persist<[UserAccount]>(
-        key: "Accounts",
-        defaultValue: [],
-        engine: KeychainStorage(service: "wiki.qaq.Asspp.Accounts"),
-    )
+class AppStore: ObservableObject {
+    @PublishedPersist(key: "Accounts", defaultValue: [], keychain: "wiki.qaq.Asspp.Accounts")
+    var accounts: [UserAccount]
 
-    var accounts: [UserAccount] {
-        get {
-            access(keyPath: \.accounts)
-            return _accounts.wrappedValue
-        }
-        set {
-            withMutation(keyPath: \.accounts) {
-                _accounts.wrappedValue = newValue
-            }
-        }
-    }
+    @PublishedPersist(key: "DeviceIdentifier", defaultValue: "", keychain: "wiki.qaq.Asspp.DeviceIdentifier")
+    var deviceIdentifier: String
 
-    @ObservationIgnored
-    private var _deviceIdentifier = Persist<String>(
-        key: "DeviceIdentifier",
-        defaultValue: "",
-        engine: KeychainStorage(service: "wiki.qaq.Asspp.DeviceIdentifier"),
-    )
-
-    var deviceIdentifier: String {
-        get {
-            access(keyPath: \.deviceIdentifier)
-            return _deviceIdentifier.wrappedValue
-        }
-        set {
-            withMutation(keyPath: \.deviceIdentifier) {
-                _deviceIdentifier.wrappedValue = newValue
-            }
-        }
-    }
-
-    @ObservationIgnored
-    private var _demoMode = Persist<Bool>(key: "DemoMode", defaultValue: false)
-
-    var demoMode: Bool {
-        get {
-            access(keyPath: \.demoMode)
-            return _demoMode.wrappedValue
-        }
-        set {
-            withMutation(keyPath: \.demoMode) {
-                _demoMode.wrappedValue = newValue
-            }
-        }
-    }
+    @PublishedPersist(key: "DemoMode", defaultValue: false)
+    var demoMode: Bool
 
     static let this = AppStore()
 

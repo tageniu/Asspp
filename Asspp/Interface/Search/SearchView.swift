@@ -26,8 +26,7 @@ struct SearchView: View {
         @State private var searchResult: [AppStore.AppPackage] = []
     #endif
 
-    @State private var navigationPath = NavigationPath()
-    @State private var vm = AppStore.this
+    @StateObject private var vm = AppStore.this
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     var possibleRegion: Set<String> {
         vm.possibleRegions
@@ -35,15 +34,20 @@ struct SearchView: View {
 
     var body: some View {
         #if os(iOS)
-            NavigationStack(path: $navigationPath) {
-                if #available(iOS 26.0, *) {
-                    modernContent
-                } else {
+            NavigationView {
+                #if compiler(>=6.2)
+                    if #available(iOS 26.0, *) {
+                        modernContent
+                    } else {
+                        legacyContent
+                    }
+                #else
                     legacyContent
-                }
+                #endif
             }
+            .navigationViewStyle(.stack)
         #else
-            NavigationStack(path: $navigationPath) {
+            NavigationStack {
                 legacyContent
             }
         #endif
@@ -57,7 +61,7 @@ struct SearchView: View {
         } label: {
             Label("Type", systemImage: searchType.iconName)
         }
-        .onChange(of: searchType) { _, _ in
+        .onChangeCompat(of: searchType) {
             searchResult = []
         }
     }
@@ -101,7 +105,7 @@ struct SearchView: View {
                 }
             }
         }
-        .onChange(of: searchRegion) { _, _ in
+        .onChangeCompat(of: searchRegion) {
             searchResult = []
         }
     }
@@ -129,7 +133,7 @@ struct SearchView: View {
             if searching || !searchResult.isEmpty {
                 Section(searching ? "Searching..." : "\(searchResult.count) Results") {
                     ForEach(searchResult) { item in
-                        NavigationLink(value: ProductDestination(archive: item, region: searchRegion)) {
+                        NavigationLink(destination: ProductView(archive: item, region: searchRegion)) {
                             ArchivePreviewView(archive: item)
                         }
                     }
@@ -138,14 +142,8 @@ struct SearchView: View {
                 .transition(.opacity)
             }
         }
-        .formStyle(.grouped)
-        .navigationDestination(for: ProductDestination.self) { dest in
-            ProductView(archive: dest.archive, region: dest.region, navigationPath: $navigationPath)
-        }
-        .navigationDestination(for: PackageManifest.self) { manifest in
-            PackageView(pkg: manifest)
-        }
-        .animation(.spring, value: searchResult)
+        .groupedFormStyle()
+        .animation(.spring(), value: searchResult)
     }
 
     func buildPickView(for keys: [String], label: () -> some View) -> some View {
@@ -214,59 +212,61 @@ extension SearchView {
 // MARK: - Liquid Glass
 
 #if os(iOS)
-    @available(iOS 26.0, *)
-    extension SearchView {
-        var modernContent: some View {
-            content
-                .searchable(text: $searchKey, placement: searchablePlacement, prompt: "Keyword")
-                .onSubmit(of: .search) { search() }
-                .toolbarVisibility(navigationBarVisibility, for: .navigationBar)
-                .navigationTitle(Text("Search - \(searchRegion.uppercased())"))
-                .toolbar {
-                    if navigationBarVisibility != .hidden {
-                        tools
-                    }
-                }
-                .safeAreaBar(edge: .top) {
-                    if navigationBarVisibility == .hidden {
-                        HStack {
-                            searchTypePicker
-                                .buttonStyle(.glass)
-                            Spacer()
-
-                            Menu {
-                                searchRegionView()
-                            } label: {
-                                Label(searchRegion, systemImage: "globe")
-                            }
-                            .menuIndicator(.visible)
-                            .buttonStyle(.glass)
+    #if compiler(>=6.2)
+        @available(iOS 26.0, *)
+        extension SearchView {
+            var modernContent: some View {
+                content
+                    .searchable(text: $searchKey, placement: searchablePlacement, prompt: "Keyword")
+                    .onSubmit(of: .search) { search() }
+                    .toolbarVisibility(navigationBarVisibility, for: .navigationBar)
+                    .navigationTitle(Text("Search - \(searchRegion.uppercased())"))
+                    .toolbar {
+                        if navigationBarVisibility != .hidden {
+                            tools
                         }
-                        .padding([.bottom, .horizontal])
                     }
+                    .safeAreaBar(edge: .top) {
+                        if navigationBarVisibility == .hidden {
+                            HStack {
+                                searchTypePicker
+                                    .buttonStyle(.glass)
+                                Spacer()
+
+                                Menu {
+                                    searchRegionView()
+                                } label: {
+                                    Label(searchRegion, systemImage: "globe")
+                                }
+                                .menuIndicator(.visible)
+                                .buttonStyle(.glass)
+                            }
+                            .padding([.bottom, .horizontal])
+                        }
+                    }
+                    .animation(.spring(), value: searchResult)
+                    .animation(.spring(), value: searching)
+            }
+
+            var navigationBarVisibility: Visibility {
+                switch horizontalSizeClass {
+                case .compact:
+                    .hidden
+                default:
+                    .automatic
                 }
-                .animation(.spring, value: searchResult)
-                .animation(.spring, value: searching)
-        }
+            }
 
-        var navigationBarVisibility: Visibility {
-            switch horizontalSizeClass {
-            case .compact:
-                .hidden
-            default:
-                .automatic
+            var searchablePlacement: SearchFieldPlacement {
+                switch horizontalSizeClass {
+                case .compact:
+                    .automatic
+                default:
+                    .toolbar
+                }
             }
         }
-
-        var searchablePlacement: SearchFieldPlacement {
-            switch horizontalSizeClass {
-            case .compact:
-                .automatic
-            default:
-                .toolbar
-            }
-        }
-    }
+    #endif
 #endif
 
 #if DEBUG

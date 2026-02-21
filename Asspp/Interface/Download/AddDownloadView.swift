@@ -17,8 +17,8 @@ struct AddDownloadView: View {
 
     @FocusState private var searchKeyFocused
 
-    @State private var avm = AppStore.this
-    @State private var dvm = Downloads.this
+    @StateObject private var avm = AppStore.this
+    @StateObject private var dvm = Downloads.this
 
     @Environment(\.dismiss) private var dismiss
 
@@ -87,7 +87,7 @@ struct AddDownloadView: View {
                 }
             }
         }
-        .formStyle(.grouped)
+        .groupedFormStyle()
         .navigationTitle("Direct Download")
     }
 }

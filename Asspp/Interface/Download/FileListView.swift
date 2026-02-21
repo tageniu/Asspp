@@ -73,13 +73,13 @@ struct FileListView: View {
                 }
             }
         }
-        .formStyle(.grouped)
+        .groupedFormStyle()
         #if os(iOS)
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
         #else
             .searchable(text: $searchText)
         #endif
-            .animation(.spring, value: items)
+            .animation(.spring(), value: items)
             .onAppear {
                 Task {
                     await MainActor.run {

@@ -7,29 +7,17 @@
 
 import AnyCodable
 import ApplePackage
+import Combine
 @preconcurrency import Digger
 import Foundation
 import Logging
 
-@Observable
 @MainActor
-class Downloads {
+class Downloads: ObservableObject {
     static let this = Downloads()
 
-    @ObservationIgnored
-    private var _manifests = Persist<[PackageManifest]>(key: "DownloadRequests", defaultValue: [])
-
-    var manifests: [PackageManifest] {
-        get {
-            access(keyPath: \.manifests)
-            return _manifests.wrappedValue
-        }
-        set {
-            withMutation(keyPath: \.manifests) {
-                _manifests.wrappedValue = newValue
-            }
-        }
-    }
+    @PublishedPersist(key: "DownloadRequests", defaultValue: [])
+    var manifests: [PackageManifest]
 
     var runningTaskCount: Int {
         manifests.count(where: { $0.state.status == .downloading })
@@ -74,6 +62,7 @@ class Downloads {
                     fmt.countStyle = .file
                     request.state.status = .downloading
                     request.state.speed = fmt.string(fromByteCount: Int64(speedBytes))
+                    self.objectWillChange.send()
                     self.saveManifests()
                 }
             }
@@ -81,6 +70,7 @@ class Downloads {
                 Task { @MainActor in
                     request.state.status = .downloading
                     request.state.percent = progress.fractionCompleted
+                    self.objectWillChange.send()
                     self.saveManifests()
                 }
             }
@@ -93,11 +83,13 @@ class Downloads {
                                 try await self.finalize(manifest: request, preparedContentAt: url)
                                 await MainActor.run {
                                     request.state.complete()
+                                    self.objectWillChange.send()
                                     self.saveManifests()
                                 }
                             } catch {
                                 await MainActor.run {
                                     request.state.error = error.localizedDescription
+                                    self.objectWillChange.send()
                                     self.saveManifests()
                                 }
                             }
@@ -110,6 +102,7 @@ class Downloads {
                             // Swift structured concurrency cancellation
                         } else {
                             request.state.error = error.localizedDescription
+                            self.objectWillChange.send()
                             self.saveManifests()
                         }
                     }

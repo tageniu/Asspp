@@ -15,7 +15,7 @@ import SwiftUI
 #endif
 
 struct PackageView: View {
-    @State var pkg: PackageManifest
+    @ObservedObject var pkg: PackageManifest
 
     var archive: AppStore.AppPackage {
         pkg.package
@@ -34,8 +34,8 @@ struct PackageView: View {
         @State private var copied = false
     #endif
 
-    @State private var vm = AppStore.this
-    @State private var downloads = Downloads.this
+    @StateObject private var vm = AppStore.this
+    @StateObject private var downloads = Downloads.this
 
     var body: some View {
         Form {
@@ -195,7 +195,7 @@ struct PackageView: View {
                 Text(url.path)
             }
         }
-        .formStyle(.grouped)
+        .groupedFormStyle()
         .navigationTitle(pkg.package.software.name)
     }
 }

@@ -20,7 +20,7 @@ struct MainView: View {
 #if os(macOS)
     private struct MacSidebarMainView: View {
         @State private var selection: SidebarSection? = .home
-        @State private var downloads = Downloads.this
+        @StateObject private var downloads = Downloads.this
 
         var body: some View {
             NavigationSplitView {
@@ -130,7 +130,7 @@ struct MainView: View {
     }
 #else
     private struct LegacyTabMainView: View {
-        @State var dvm = Downloads.this
+        @StateObject var dvm = Downloads.this
 
         var body: some View {
             TabView {
@@ -153,7 +153,7 @@ struct MainView: View {
 
     @available(iOS 18.0, *)
     struct NewMainView: View {
-        @State var dvm = Downloads.this
+        @StateObject var dvm = Downloads.this
 
         var body: some View {
             TabView {

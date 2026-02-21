@@ -11,20 +11,18 @@ import Kingfisher
 import SwiftUI
 
 struct ProductView: View {
-    @State private var archive: AppPackageArchive
-    @Binding var navigationPath: NavigationPath
+    @StateObject private var archive: AppPackageArchive
 
     var region: String {
         archive.region
     }
 
-    init(archive: AppStore.AppPackage, region: String, navigationPath: Binding<NavigationPath>) {
-        _archive = State(initialValue: AppPackageArchive(accountID: nil, region: region, package: archive))
-        _navigationPath = navigationPath
+    init(archive: AppStore.AppPackage, region: String) {
+        _archive = StateObject(wrappedValue: AppPackageArchive(accountID: nil, region: region, package: archive))
     }
 
-    @State private var vm = AppStore.this
-    @State private var dvm = Downloads.this
+    @StateObject private var vm = AppStore.this
+    @StateObject private var dvm = Downloads.this
 
     var eligibleAccounts: [AppStore.UserAccount] {
         vm.eligibleAccounts(for: region)
@@ -72,12 +70,9 @@ struct ProductView: View {
             }
             pricing
         }
-        .formStyle(.grouped)
+        .groupedFormStyle()
         .onAppear {
             selection = eligibleAccounts.first?.id ?? .init()
-        }
-        .navigationDestination(for: PackageManifest.self) { manifest in
-            PackageView(pkg: manifest)
         }
         .navigationTitle("Select Account")
         .alert("License Required", isPresented: $showLicenseAlert) {
@@ -214,7 +209,7 @@ struct ProductView: View {
     var buttons: some View {
         Section {
             if let req = dvm.downloadRequest(forArchive: archive.package) {
-                NavigationLink(value: req) {
+                NavigationLink(destination: PackageView(pkg: req)) {
                     Text("Show Download")
                 }
             } else {
@@ -223,9 +218,6 @@ struct ProductView: View {
                     do {
                         try await dvm.startDownload(for: archive.package, accountID: account.id)
                         hint = Hint(message: String(localized: "Download Requested"), color: nil)
-                        if let req = dvm.downloadRequest(forArchive: archive.package) {
-                            navigationPath.append(req)
-                        }
                     } catch {
                         if case ApplePackageError.licenseRequired = error, archive.package.software.price == 0 {
                             showLicenseAlert = true

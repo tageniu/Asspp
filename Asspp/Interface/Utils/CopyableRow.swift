@@ -11,7 +11,9 @@ struct CopyableRow: View {
     var monospaced: Bool = false
 
     var body: some View {
-        LabeledContent(label) {
+        HStack {
+            Text(label)
+            Spacer()
             Text(value)
                 .font(monospaced ? .system(.body, design: .monospaced) : .body)
                 .foregroundStyle(.secondary)

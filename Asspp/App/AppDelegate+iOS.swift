@@ -4,10 +4,12 @@
 //
 
 #if canImport(UIKit)
+    import Combine
     import UIKit
 
     class AppDelegate: NSObject, UIApplicationDelegate {
         var backgroundTaskIdentifier: UIBackgroundTaskIdentifier = .invalid
+        var cancellable: AnyCancellable?
 
         func application(
             _: UIApplication,
@@ -21,15 +23,21 @@
 
         @MainActor
         private func observeDownloadCount() {
-            withObservationTracking {
-                let count = Downloads.this.runningTaskCount
-                UIApplication.shared.isIdleTimerDisabled = count > 0
-                BackgroundAudioPlayer.shared.setActive(count > 0)
-            } onChange: {
-                Task { @MainActor in
-                    self.observeDownloadCount()
+            // Run once immediately
+            updateForDownloadCount()
+
+            cancellable = Downloads.this.objectWillChange
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    self?.updateForDownloadCount()
                 }
-            }
+        }
+
+        @MainActor
+        private func updateForDownloadCount() {
+            let count = Downloads.this.runningTaskCount
+            UIApplication.shared.isIdleTimerDisabled = count > 0
+            BackgroundAudioPlayer.shared.setActive(count > 0)
         }
 
         func applicationWillResignActive(_: UIApplication) {

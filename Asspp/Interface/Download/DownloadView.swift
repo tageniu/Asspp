@@ -8,19 +8,27 @@
 import SwiftUI
 
 struct DownloadView: View {
-    @State private var vm = Downloads.this
+    @StateObject private var vm = Downloads.this
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Downloads")
-        }
+        #if os(iOS)
+            NavigationView {
+                content
+                    .navigationTitle("Downloads")
+            }
+            .navigationViewStyle(.stack)
+        #else
+            NavigationStack {
+                content
+                    .navigationTitle("Downloads")
+            }
+        #endif
     }
 
     private var content: some View {
         Group {
             if vm.manifests.isEmpty {
-                ContentUnavailableView(
+                CompatContentUnavailableView(
                     label: {
                         Label("No Downloads", systemImage: "arrow.down.circle")
                     },
@@ -40,10 +48,7 @@ struct DownloadView: View {
                 }
             }
         }
-        .formStyle(.grouped)
-        .navigationDestination(for: PackageManifest.self) { manifest in
-            PackageView(pkg: manifest)
-        }
+        .groupedFormStyle()
         .toolbar {
             NavigationLink(destination: AddDownloadView()) {
                 Image(systemName: "plus")
@@ -53,19 +58,8 @@ struct DownloadView: View {
 
     private var packageList: some View {
         ForEach(vm.manifests, id: \.id) { req in
-            NavigationLink(value: req) {
-                VStack(spacing: 8) {
-                    ArchivePreviewView(archive: req.package)
-                    SimpleProgress(progress: req.state.percent)
-                        .animation(.interactiveSpring, value: req.state.percent)
-                    HStack {
-                        Text(req.hint)
-                        Spacer()
-                        Text(req.creation.formatted())
-                    }
-                    .font(.system(.footnote, design: .rounded))
-                    .foregroundStyle(.secondary)
-                }
+            NavigationLink(destination: PackageView(pkg: req)) {
+                PackageRow(req: req, downloads: vm)
             }
             .contextMenu {
                 let actions = vm.getAvailableActions(for: req)
@@ -78,6 +72,26 @@ struct DownloadView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+private struct PackageRow: View {
+    @ObservedObject var req: PackageManifest
+    let downloads: Downloads
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ArchivePreviewView(archive: req.package)
+            SimpleProgress(progress: req.state.percent)
+                .animation(.interactiveSpring(), value: req.state.percent)
+            HStack {
+                Text(req.hint)
+                Spacer()
+                Text(req.creation.formatted())
+            }
+            .font(.system(.footnote, design: .rounded))
+            .foregroundStyle(.secondary)
         }
     }
 }

@@ -9,10 +9,9 @@ import ApplePackage
 import SwiftUI
 
 struct AccountView: View {
-    @State private var vm = AppStore.this
+    @StateObject private var vm = AppStore.this
     @State private var addAccount = false
     @State private var selectedID: AppStore.UserAccount.ID?
-    @State private var navigationPath = NavigationPath()
 
     var body: some View {
         #if os(macOS)
@@ -24,7 +23,7 @@ struct AccountView: View {
 
     #if os(macOS)
         private var macOSBody: some View {
-            NavigationStack(path: $navigationPath) {
+            NavigationStack {
                 accountsTable
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .navigationTitle("Accounts")
@@ -56,8 +55,8 @@ struct AccountView: View {
                 .width(min: 60, ideal: 80, max: 120)
 
                 TableColumn("") { account in
-                    Button {
-                        navigationPath.append(account.id)
+                    NavigationLink {
+                        AccountDetailView(accountId: account.id)
                     } label: {
                         Image(systemName: "info.circle")
                     }
@@ -67,8 +66,10 @@ struct AccountView: View {
             }
             .contextMenu(forSelectionType: AppStore.UserAccount.ID.self) { ids in
                 if let id = ids.first {
-                    Button("View Details") {
-                        navigationPath.append(id)
+                    NavigationLink {
+                        AccountDetailView(accountId: id)
+                    } label: {
+                        Text("View Details")
                     }
                 }
             }
@@ -78,7 +79,7 @@ struct AccountView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay {
                 if vm.accounts.isEmpty {
-                    ContentUnavailableView(
+                    CompatContentUnavailableView(
                         label: {
                             Label("No Accounts", systemImage: "person.crop.circle.badge.questionmark")
                         },
@@ -118,10 +119,10 @@ struct AccountView: View {
 
     #if !os(macOS)
         private var iOSBody: some View {
-            NavigationStack(path: $navigationPath) {
+            NavigationView {
                 Group {
                     if vm.accounts.isEmpty {
-                        ContentUnavailableView(
+                        CompatContentUnavailableView(
                             label: {
                                 Label("No Accounts", systemImage: "person.crop.circle.badge.questionmark")
                             },
@@ -136,7 +137,7 @@ struct AccountView: View {
                         Form {
                             Section {
                                 ForEach(vm.accounts) { account in
-                                    NavigationLink(value: account.id) {
+                                    NavigationLink(destination: AccountDetailView(accountId: account.id)) {
                                         HStack {
                                             Text(account.account.email)
                                                 .redacted(reason: .placeholder, isEnabled: vm.demoMode)
@@ -151,11 +152,8 @@ struct AccountView: View {
                                 Text("Your accounts are saved in your Keychain and will be synced across devices with the same iCloud account signed in.")
                             }
                         }
-                        .formStyle(.grouped)
+                        .groupedFormStyle()
                     }
-                }
-                .navigationDestination(for: AppStore.UserAccount.ID.self) { id in
-                    AccountDetailView(accountId: id)
                 }
                 .navigationTitle("Accounts")
                 .toolbar {
@@ -168,10 +166,12 @@ struct AccountView: View {
                     }
                 }
             }
+            .navigationViewStyle(.stack)
             .sheet(isPresented: $addAccount) {
-                NavigationStack {
+                NavigationView {
                     AddAccountView()
                 }
+                .navigationViewStyle(.stack)
             }
         }
     #endif

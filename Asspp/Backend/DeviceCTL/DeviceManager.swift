@@ -7,20 +7,19 @@
 
 #if os(macOS)
     import ApplePackage
+    import Combine
     import Foundation
 
-    @Observable
-    class DeviceManager {
+    class DeviceManager: ObservableObject {
         @Persist(key: "InstalledAppsByDevice", defaultValue: [:])
-        @ObservationIgnored
         private var installedApps: [String: Set<InstalledAppInfo>]
 
-        var hint: Hint?
+        @Published var hint: Hint?
 
-        var devices = [DeviceCTL.Device]()
-        var selectedDeviceID: String?
+        @Published var devices = [DeviceCTL.Device]()
+        @Published var selectedDeviceID: String?
 
-        @MainActor var busyDevices = [DeviceCTL.Device: Process]()
+        @MainActor @Published var busyDevices = [DeviceCTL.Device: Process]()
 
         @MainActor var installingProcess: Process? {
             selectedDevice.flatMap { busyDevices[$0] }
@@ -75,6 +74,7 @@
                 region: ApplePackage.Configuration.countryCode(for: account.store) ?? "--",
                 accountID: account.appleId,
             ))
+            objectWillChange.send()
         }
 
         func loadApps(for device: DeviceCTL.Device, bundleID: String? = nil) async -> [DeviceCTL.App] {
@@ -96,6 +96,7 @@
         func getInstalledApps(from device: DeviceCTL.Device) async -> [InstalledApp] {
             let installed = await loadInstalledApp(from: device)
             installedApps[device.id] = installed
+            objectWillChange.send()
             return installed.sorted(using: KeyPathComparator(\.package.software.name))
                 .map(InstalledApp.init(info:))
         }
@@ -187,6 +188,7 @@
             try await DeviceCTL.install(ipa: request.targetLocation, to: device, process: process)
             app.info = updatedApp
             installedApps[device.id, default: []].insert(app.info)
+            objectWillChange.send()
         }
 
         private func resetError() {
@@ -259,13 +261,13 @@
             case error(_ message: String)
         }
 
-        @Observable class InstalledApp {
+        class InstalledApp: ObservableObject {
             init(info: InstalledAppInfo) {
                 self.info = info
             }
 
-            var info: InstalledAppInfo
-            var state: UpdateState = .idle
+            @Published var info: InstalledAppInfo
+            @Published var state: UpdateState = .idle
         }
     }
 #endif

@@ -14,7 +14,7 @@ import SwiftUI
 
 struct SettingView: View {
     @Environment(\.openURL) private var openURL
-    @State private var vm = AppStore.this
+    @StateObject private var vm = AppStore.this
 
     @State private var deviceIdTapCount = 0
     @State private var showDeviceIdWarning = false
@@ -23,9 +23,16 @@ struct SettingView: View {
     @State private var showResetConfirmation = false
 
     var body: some View {
-        NavigationStack {
-            formContent
-        }
+        #if os(iOS)
+            NavigationView {
+                formContent
+            }
+            .navigationViewStyle(.stack)
+        #else
+            NavigationStack {
+                formContent
+            }
+        #endif
     }
 
     private var formContent: some View {
@@ -146,7 +153,7 @@ struct SettingView: View {
                 Text("This will reset all your settings.")
             }
         }
-        .formStyle(.grouped)
+        .groupedFormStyle()
         .navigationTitle("Settings")
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
@@ -168,7 +175,7 @@ struct SettingView: View {
                     NSApp.terminate(nil)
                 #endif
                 Task { @MainActor in
-                    try? await Task.sleep(for: .seconds(1))
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
                     exit(0)
                 }
             }

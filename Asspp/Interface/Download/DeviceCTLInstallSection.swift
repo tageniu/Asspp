@@ -3,7 +3,7 @@
     import SwiftUI
 
     struct DeviceCTLInstallSection: View {
-        @State private var dm = DeviceManager()
+        @StateObject private var dm = DeviceManager()
         @State private var installed: DeviceCTL.App?
         @State private var isLoading = false
         @State private var wiggle: Bool = false

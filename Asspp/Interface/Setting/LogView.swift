@@ -29,7 +29,7 @@ struct LogView: View {
                     }
                 }
                 .transition(.opacity)
-                .formStyle(.grouped)
+                .groupedFormStyle()
                 .listStyle(.plain)
                 .toolbar {
                     ToolbarItem(placement: .automatic) {
@@ -45,7 +45,7 @@ struct LogView: View {
                         .font(.system(size: 48))
                         .foregroundStyle(.yellow)
                     Text("Sensitive Content")
-                        .font(.system(.title2, design: .rounded, weight: .semibold))
+                        .font(.title2.weight(.semibold))
                     Text("Logs may contain sensitive account information. Do not screenshot or share them to avoid leaking your credentials.")
                         .font(.system(.callout, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -56,7 +56,7 @@ struct LogView: View {
                         fill()
                     } label: {
                         Text("Show Logs")
-                            .font(.system(.body, design: .rounded, weight: .semibold))
+                            .font(.body.weight(.semibold))
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.red)
@@ -65,7 +65,7 @@ struct LogView: View {
                 .transition(.opacity)
             }
         }
-        .animation(.spring, value: unlocked)
+        .animation(.spring(), value: unlocked)
         .navigationTitle("Logs")
     }
 }

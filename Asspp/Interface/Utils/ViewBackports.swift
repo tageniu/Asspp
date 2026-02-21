@@ -97,6 +97,45 @@ extension View {
 
     @ViewBuilder
     func hide() -> some View {}
+
+    @ViewBuilder
+    func macHiddenToolbarBackground() -> some View {
+        #if os(macOS)
+            if #available(macOS 15.0, *) {
+                self.toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+            } else {
+                self
+            }
+        #else
+            self
+        #endif
+    }
+
+    @ViewBuilder
+    func macSymbolReplaceTransition() -> some View {
+        #if os(macOS)
+            if #available(macOS 14.0, *) {
+                self.contentTransition(.symbolEffect(.replace))
+            } else {
+                self
+            }
+        #else
+            self
+        #endif
+    }
+
+    @ViewBuilder
+    func macWiggleEffect<V: Equatable>(value: V) -> some View {
+        #if os(macOS)
+            if #available(macOS 15.0, *) {
+                self.symbolEffect(.wiggle, options: .nonRepeating, value: value)
+            } else {
+                self
+            }
+        #else
+            self
+        #endif
+    }
 }
 
 public extension ToolbarContent {

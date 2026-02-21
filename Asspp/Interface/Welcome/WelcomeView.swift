@@ -53,7 +53,7 @@ struct WelcomeView: View {
                 .ignoresSafeArea(),
         )
         #if os(macOS)
-        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+        .macHiddenToolbarBackground()
         #endif
     }
 }

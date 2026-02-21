@@ -33,7 +33,7 @@ struct AccountView: View {
                 AddAccountView()
                     .frame(minWidth: 480, idealWidth: 520, minHeight: 340, idealHeight: 380)
             }
-            .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+            .macHiddenToolbarBackground()
         }
 
         private var accountsTable: some View {

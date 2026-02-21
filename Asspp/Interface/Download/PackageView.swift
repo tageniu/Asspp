@@ -131,7 +131,7 @@ struct PackageView: View {
                                 }
                             } label: {
                                 Image(systemName: copied ? "checkmark" : "document.on.document")
-                                    .contentTransition(.symbolEffect(.replace))
+                                    .macSymbolReplaceTransition()
                             }
                             .help("Copy File Path")
                             .buttonStyle(.borderless)

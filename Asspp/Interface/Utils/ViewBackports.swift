@@ -102,12 +102,16 @@ extension View {
 public extension ToolbarContent {
     @ToolbarContentBuilder
     nonisolated func hideSharedBackground() -> some ToolbarContent {
-        #if compiler(>=6.2)
-            if #available(iOS 26.0, macOS 26.0, *) {
-                sharedBackgroundVisibility(.hidden)
-            } else {
+        #if os(macOS)
+            #if compiler(>=6.2)
+                if #available(macOS 26.0, *) {
+                    sharedBackgroundVisibility(.hidden)
+                } else {
+                    self
+                }
+            #else
                 self
-            }
+            #endif
         #else
             self
         #endif

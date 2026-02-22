@@ -12,6 +12,10 @@ import SwiftUI
     import UIKit
 #endif
 
+#if canImport(FLEX)
+    import FLEX
+#endif
+
 struct SettingView: View {
     @Environment(\.openURL) private var openURL
     @StateObject private var vm = AppStore.this
@@ -42,6 +46,11 @@ struct SettingView: View {
                 Button("Delete All Downloads", role: .destructive) {
                     Downloads.this.removeAll()
                 }
+                #if canImport(FLEX)
+                    Button("Toggle FLEX Inspector") {
+                        FLEXManager.shared.toggleExplorer()
+                    }
+                #endif
             } header: {
                 Text("General")
             } footer: {

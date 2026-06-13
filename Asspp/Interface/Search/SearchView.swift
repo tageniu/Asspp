@@ -298,6 +298,8 @@ extension ApplePackage.EntityType {
             "iphone"
         case .iPad:
             "ipad"
+        case .appleTV:
+            "appleTV"
         }
     }
 }

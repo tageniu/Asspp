@@ -1,5 +1,5 @@
 {
-  "originHash" : "7c78253d2c10449c714d18337097e74f58beff98cb7c463ed11e4f0debbbbb72",
+  "originHash" : "1a820beefc59d37b8100e5a7b0793cbbef9e6ba816060518e50d45dbaa8749eb",
   "pins" : [
     {
       "identity" : "anycodable",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Lakr233/ApplePackage",
       "state" : {
-        "revision" : "fd4860b78eb2db60a0dcbe7e5a6e4a3d2cae004e",
-        "version" : "1.2.3"
+        "revision" : "28710fec47fa89dfdedf2bf47cc284a2334ddfdc",
+        "version" : "1.2.7"
       }
     },
     {
@@ -152,6 +152,15 @@
       "state" : {
         "revision" : "87e50f483c54e6efd60e885f7f5aa946cee68023",
         "version" : "1.2.1"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "6a52f3251125d74daf04fcbd5e6f08a75d074382",
+        "version" : "1.8.2"
       }
     },
     {
